@@ -11,6 +11,8 @@ import com.jencarnacion.securedApp.security.jwt.service.CustomUserDetailsService
 import com.jencarnacion.securedApp.security.jwt.service.JwtService;
 
 import java.io.IOException;
+
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +41,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
-
         String token = jwtService.generateToken(userDetails);
 
-        // Puedes devolverlo como redirect o JSON
-        response.sendRedirect(frontendUrl + "?token=" + token);
+        Cookie cookie = new Cookie("jwt", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(60 * 60);
+        cookie.setAttribute("SameSite", "Lax");
+
+        response.addCookie(cookie);
+
+        response.sendRedirect(frontendUrl + "/oauth2/callback");
     }
 }
