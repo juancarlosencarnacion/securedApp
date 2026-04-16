@@ -17,6 +17,7 @@ import com.jencarnacion.securedApp.role.repository.RoleRepository;
 import com.jencarnacion.securedApp.security.jwt.service.CustomUserDetailsService;
 import com.jencarnacion.securedApp.security.jwt.service.JwtService;
 import com.jencarnacion.securedApp.user.User;
+import com.jencarnacion.securedApp.user.enums.AuthProvider;
 import com.jencarnacion.securedApp.user.mapper.UserMapper;
 import com.jencarnacion.securedApp.user.repository.UserRepository;
 
@@ -47,12 +48,13 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.toEntity(request);
 
         user.setPassword(passwordEncoder.encode(request.password()));
+        user.setProvider(AuthProvider.LOCAL);
         user.setRoles(Set.of(role));
 
         userRepository.save(user);
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
-        
+
         String token = jwtService.generateToken(userDetails);
 
         return new AuthResponse(
@@ -73,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
                         request.password()));
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
-        
+
         String token = jwtService.generateToken(userDetails);
 
         return new AuthResponse(
@@ -81,5 +83,4 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 userMapper.toResponse(user));
     }
-
 }

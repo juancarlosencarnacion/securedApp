@@ -7,8 +7,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -17,6 +15,7 @@ import com.jencarnacion.securedApp.security.jwt.filter.JwtAuthenticationFilter;
 import com.jencarnacion.securedApp.security.oauth2.CustomOAuth2UserService;
 import com.jencarnacion.securedApp.security.oauth2.OAuth2SuccessHandler;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -39,8 +38,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/oauth2/authorize/**", // 👈 solo este path inicia OAuth2,
-                                "oauth2/authorization/**",
+                                "/oauth2/authorize/**", // 👈 solo este path inicia
+                                                        // OAuth2,
+                                "/oauth2/authorization/**",
                                 "/login/oauth2/**",
                                 "/free/**",
                                 "/error")
@@ -50,9 +50,17 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            System.out.println("Error en OAuth2: " + exception.getMessage());
+                            exception.printStackTrace();
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"error\": \"" + exception.getMessage() + "\"}");
+                        })
                         .authorizationEndpoint(auth -> auth
                                 .baseUri("/oauth2/authorization")))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -61,10 +69,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

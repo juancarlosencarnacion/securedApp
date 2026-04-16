@@ -17,20 +17,18 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    // private String secretKey = "Q2VxZ0tJZ0ZyZUxqRk1Yb3pNNU9zVnJQeE9aU0hCUnB4c0ZqT2lQb0R6cWZJbw==";
-
     @Value("${jwt.secret}")
     private String secretKey;
 
     public String generateToken(UserDetails user) {
-    return Jwts.builder()
-            .setClaims(new HashMap<>())
-            .setSubject(user.getUsername())
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() +  1000 * 60 * 60))
-            .signWith(getSignKey(), SignatureAlgorithm.HS256)
-            .compact();
-}
+        return Jwts.builder()
+                .setClaims(new HashMap<>())
+                .setSubject(user.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
 
     public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
@@ -54,9 +52,6 @@ public class JwtService {
     }
 
     private Key getSignKey() {
-        // byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        // return Keys.hmacShaKeyFor(keyBytes);
-
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalStateException("JWT secret is not configured");
         }

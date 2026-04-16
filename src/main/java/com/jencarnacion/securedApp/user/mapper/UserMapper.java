@@ -19,9 +19,12 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "provider", ignore = true)
     User toEntity(RegisterRequest request);
 
     @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
+    @Mapping(target = "provider", source = "provider")
     UserResponse toResponse(User user);
 
     default Set<String> mapRoles(Set<Role> roles) {

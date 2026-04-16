@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.jencarnacion.securedApp.security.jwt.service.CustomUserDetailsService;
 import com.jencarnacion.securedApp.security.jwt.service.JwtService;
+import com.jencarnacion.securedApp.user.repository.UserRepository;
 
 import java.io.IOException;
 
@@ -23,6 +24,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final UserRepository userRepository;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -37,8 +39,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String email = oauthUser.getAttribute("email");
 
         if (email == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Email not found");
-            return;
+            // Fallback: GitHub siempre envía "login" (username)
+            String login = oauthUser.getAttribute("login");
+            // Busca al usuario en la DB por el login o email que guardaste
+            var user = userRepository.findByEmail(login + "@github.com")
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            email = user.getEmail();
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
@@ -53,6 +59,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         response.addCookie(cookie);
 
-        response.sendRedirect(frontendUrl + "/oauth2/callback");
+        // response.sendRedirect(frontendUrl + "/oauth2/callback");
+        response.sendRedirect(frontendUrl + "/dashboard");
     }
 }
