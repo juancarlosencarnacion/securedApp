@@ -4,6 +4,15 @@ REST API with JWT authentication and OAuth2 login (Google, GitHub), built with S
 
 ---
 
+## 🧠 Key Highlights
+
+- Implemented stateless authentication using JWT and Spring Security
+- Integrated OAuth2 login with Google and GitHub providers
+- Designed secure authentication flow using HttpOnly cookies
+- Structured project following clean architecture principles
+
+---
+
 ## 🚀 Tech Stack
 
 - Java 21
